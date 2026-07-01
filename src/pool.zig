@@ -94,7 +94,7 @@ pub fn Pool(
         pub const ColumnSlices = StructOfSlices(Columns);
         pub const Column = meta.FieldEnum(Columns);
 
-        pub const column_fields = meta.fields(Columns);
+        pub const column_fields = utils.fields(Columns);
         pub const column_count = column_fields.len;
 
         pub fn ColumnType(comptime column: Column) type {
@@ -103,7 +103,7 @@ pub fn Pool(
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-        const private_fields = meta.fields(struct {
+        const private_fields = utils.fields(struct {
             @"Pool._free_queue": AddressableIndex,
             @"Pool._curr_cycle": AddressableCycle,
         });
@@ -112,7 +112,7 @@ pub fn Pool(
             const field_count = private_fields.len + column_fields.len;
             var field_names: [field_count][]const u8 = undefined;
             var field_types: [field_count]type = undefined;
-            var field_attrs: [field_count]std.builtin.Type.StructField.Attributes = undefined;
+            var field_attrs: [field_count]std.builtin.Type.Struct.FieldAttributes = undefined;
 
             for (
                 private_fields,
@@ -512,7 +512,7 @@ pub fn Pool(
 
         /// Sets a column value. In most cases, `setColumnAssumeLive` should be used instead.
         pub fn setColumnUnchecked(self: Self, handle: AddressableHandle, comptime column: Column, value: ColumnType(column)) void {
-            const column_field = meta.fieldInfo(Columns, column);
+            const column_field = column_fields[@intFromEnum(column)];
             self.deinitColumnAt(handle.index, column_field);
             @field(self.columns, column_field.name)[handle.index] = value;
         }
@@ -525,7 +525,7 @@ pub fn Pool(
 
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-        const StructField = std.builtin.Type.StructField;
+        const StructField = utils.FieldInfo;
 
         fn initColumnsAt(self: Self, index: AddressableIndex, values: Columns) void {
             inline for (column_fields) |column_field| {

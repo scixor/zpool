@@ -16,6 +16,43 @@ pub fn isStruct(comptime T: type) bool {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+/// A comptime field descriptor mirroring the old `std.meta.fields` element
+/// type, rebuilt from the new `@typeInfo(...).@"struct"` API.
+pub const FieldInfo = struct {
+    name: []const u8,
+    type: type,
+    is_comptime: bool,
+    alignment: ?usize,
+    default_value_ptr: ?*const anyopaque,
+};
+
+/// Equivalent of the removed `std.meta.fields(T)` for structs, returning a
+/// comptime slice of `FieldInfo`.
+pub fn fields(comptime T: type) []const FieldInfo {
+    return comptime blk: {
+        const info = @typeInfo(T).@"struct";
+        var result: [info.field_names.len]FieldInfo = undefined;
+        for (
+            info.field_names,
+            info.field_types,
+            info.field_attrs,
+            &result,
+        ) |name, field_type, attrs, *f| {
+            f.* = .{
+                .name = name,
+                .type = field_type,
+                .is_comptime = attrs.@"comptime",
+                .alignment = attrs.@"align",
+                .default_value_ptr = attrs.default_value_ptr,
+            };
+        }
+        const final = result;
+        break :blk &final;
+    };
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 /// UInt(bits) returns an unsigned integer type of the requested bit width.
 pub fn UInt(comptime bits: u8) type {
     return @Int(.unsigned, bits);
@@ -48,30 +85,27 @@ pub fn AddressableUInt(comptime min_bits: u8) type {
 /// Given: `Struct = struct { foo: u32, bar: u64 }`
 /// Returns: `StructOfSlices = struct { foo: []u32, bar: []u64 }`
 pub fn StructOfSlices(comptime Struct: type) type {
-    // same number of fields in the new struct
-    const struct_fields = @typeInfo(Struct).@"struct".fields;
-    var field_names: [struct_fields.len][]const u8 = undefined;
-    var field_types: [struct_fields.len]type = undefined;
+    const info = @typeInfo(Struct).@"struct";
+    var field_names: [info.field_names.len][]const u8 = undefined;
+    var field_types: [info.field_types.len]type = undefined;
 
     inline for (
-        struct_fields,
-        field_names[0..struct_fields.len],
-        field_types[0..struct_fields.len],
-    ) |field, *name, *Type| {
+        info.field_names,
+        info.field_types,
+        info.field_attrs,
+        &field_names,
+        &field_types,
+    ) |name, element_type, attrs, *new_name, *NewType| {
         // u32 -> []u32
-        const element_type = field.type;
-
         const FieldType = @Pointer(
             .slice,
-            .{
-                .@"align" = field.alignment,
-            },
+            .{ .@"align" = attrs.@"align" },
             element_type,
             null,
         );
 
-        name.* = field.name;
-        Type.* = FieldType;
+        new_name.* = name;
+        NewType.* = FieldType;
     }
 
     return @Struct(

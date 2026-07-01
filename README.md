@@ -2,6 +2,10 @@
 
 Generic pool & handle implementation for Zig. Based on [Andre Weissflog's "Handles Are The Better Pointers"](https://floooh.github.io/2018/06/17/handles-vs-pointers.html).
 
+> [!NOTE]
+> This is a fork maintained on a best-effort basis to track the Zig `master` branch.
+> Requires Zig `0.17.0-dev.1099+7db2ef610` or newer.
+
 Exposing API resources using pools and handles is a common way to avoid exposing
 implementation details to calling code and providing some insulation against
 stale references in data structures maintained by the caller.
