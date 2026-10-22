@@ -734,11 +734,11 @@ const DeinitCounter = struct {
 
     counter: *u32,
 
-    fn init(_counter: *u32) Self {
+    pub fn init(_counter: *u32) Self {
         return Self{ .counter = _counter };
     }
 
-    fn deinit(self: *Self) void {
+    pub fn deinit(self: *Self) void {
         self.counter.* += 1;
     }
 };
@@ -1475,7 +1475,7 @@ test "Adds and removes triggering resize" {
     var pool = TestPool.init(std.testing.allocator);
     defer pool.deinit();
 
-    var handles: std.ArrayListUnmanaged(TestPool.Handle) = .empty;
+    var handles: std.ArrayList(TestPool.Handle) = .empty;
     defer handles.deinit(std.testing.allocator);
 
     for (0..16) |ix| {
