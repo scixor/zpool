@@ -75,7 +75,7 @@ pub fn Handle(
         const CycleType = UInt(cycle_bits);
         const HandleUnion = extern union {
             id: Id,
-            bits: packed struct(Id) {
+            bits: bitpack struct(Id) {
                 cycle: CycleType, // least significant bits
                 index: IndexType, // most significant bits
             },

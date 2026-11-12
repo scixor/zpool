@@ -4,7 +4,7 @@ Generic pool & handle implementation for Zig. Based on [Andre Weissflog's "Handl
 
 > [!NOTE]
 > This is a fork maintained on a best-effort basis to track the Zig `master` branch.
-> Requires Zig `0.17.0-dev.1099+7db2ef610` or newer.
+> Requires Zig `0.18.0-dev.1005+75d48dfff` or newer.
 
 Exposing API resources using pools and handles is a common way to avoid exposing
 implementation details to calling code and providing some insulation against
